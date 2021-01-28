@@ -46,5 +46,5 @@ iconset: ## build the ExampleGame.icns file and put it where it goes
 	iconutil -c icns -o _build/macos/$(APPNAME).app/Contents/Resources/$(APPNAME).icns _build/macos/$(APPNAME).iconset
 	rm -r _build/macos/$(APPNAME).iconset
 
-run: _build/x86_64/example_game.x86_64 ## run the linux.x86_64 binary
+run: linux_build ## run the linux.x86_64 binary
 	./_build/x86_64/example_game.x86_64
