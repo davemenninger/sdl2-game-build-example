@@ -1,5 +1,6 @@
 #!make
 
+SHELL := /bin/bash
 APPNAME=ExampleGame
 
 .PHONY: help all linux_build macos_build info_plist iconset run
