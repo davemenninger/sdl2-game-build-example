@@ -15,7 +15,8 @@ typedef struct rgb {
 
 SDL_Window *window = NULL;
 SDL_Surface *surface = NULL;
-Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+Uint32 render_flags =
+    0; // SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 SDL_Renderer *rend;
 SDL_bool quit = SDL_FALSE;
 SDL_Event event;
@@ -30,6 +31,7 @@ int velocity = 2;
 int setup();
 void update_rect();
 void draw_game();
+int screenshot();
 
 int error(char *msg, const char *err) {
   printf("Error %s: %s\n", msg, err);
@@ -103,6 +105,8 @@ int main(int argc, char *args[]) {
     SDL_Delay(1000 / 60);
   }
 
+  screenshot();
+
   /* close */
   SDL_FreeSurface(surface);
   surface = NULL;
@@ -113,7 +117,7 @@ int main(int argc, char *args[]) {
   return 0;
 }
 
-int setup(){
+int setup() {
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
     return error("init", SDL_GetError());
 
@@ -137,43 +141,58 @@ int setup(){
   rect_color.blue = 127;
 }
 
-void update_rect(){
-    if (right == 1) {
-      rect.x += velocity;
-    }
+void update_rect() {
+  if (right == 1) {
+    rect.x += velocity;
+  }
 
-    if (left == 1) {
-      rect.x -= velocity;
-    }
+  if (left == 1) {
+    rect.x -= velocity;
+  }
 
-    rect.x = rect.x % (SCREEN_WIDTH - rect.w);
-    if (rect.x < 0)
-      rect.x = SCREEN_WIDTH - rect.w;
+  rect.x = rect.x % (SCREEN_WIDTH - rect.w);
+  if (rect.x < 0)
+    rect.x = SCREEN_WIDTH - rect.w;
 
-    if (up == 1){
-      rect.y -= velocity;
-    }
+  if (up == 1) {
+    rect.y -= velocity;
+  }
 
-    if (down == 1){
-      rect.y += velocity;
-    }
+  if (down == 1) {
+    rect.y += velocity;
+  }
 
-    rect.y = rect.y % (SCREEN_HEIGHT - rect.h);
-    if (rect.y < 0)
-      rect.y = SCREEN_HEIGHT - rect.h;
+  rect.y = rect.y % (SCREEN_HEIGHT - rect.h);
+  if (rect.y < 0)
+    rect.y = SCREEN_HEIGHT - rect.h;
 
-    rect_color.red   += rand()%6  - 3;
-    rect_color.green += rand()%10 - 5;
-    rect_color.blue  += rand()%14 - 7;
+  rect_color.red += rand() % 6 - 3;
+  rect_color.green += rand() % 10 - 5;
+  rect_color.blue += rand() % 14 - 7;
 
-    velocity = (rect_color.blue + rect_color.red + rect_color.green) / 120;
+  velocity = (rect_color.blue + rect_color.red + rect_color.green) / 120;
 }
 
-void draw_game(){
-    SDL_SetRenderDrawColor(rend, rect_color.red, rect_color.green, rect_color.blue, 255);
-    SDL_RenderFillRect(rend, &rect);
-    SDL_RenderDrawRect(rend, &rect);
-    SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
+void draw_game() {
+  SDL_SetRenderDrawColor(rend, rect_color.red, rect_color.green,
+                         rect_color.blue, 255);
+  SDL_RenderFillRect(rend, &rect);
+  SDL_RenderDrawRect(rend, &rect);
+  SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
 
-    SDL_RenderPresent(rend);
+  SDL_RenderPresent(rend);
+}
+
+int screenshot() {
+  surface =
+      SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0, 0, 0, 0);
+
+  if (SDL_RenderReadPixels(rend, NULL, surface->format->format, surface->pixels,
+                           surface->pitch) != 0) {
+    return error("SDL_RenderReadPixels failed: ", SDL_GetError());
+  }
+
+  if (SDL_SaveBMP(surface, "screenshot.bmp") != 0) {
+    return error("SDL_SaveBMP failed:", SDL_GetError());
+  }
 }
