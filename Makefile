@@ -1,20 +1,35 @@
+#!make
+
 APPNAME=ExampleGame
 
-all: linux_build macos_build
+.PHONY: help all linux_build macos_build info_plist iconset run
 
-linux_build: example_game.c
+help: ## Shows this help.
+	@IFS=$$'\n' ; \
+	help_lines=(`fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//'`); \
+	for help_line in $${help_lines[@]}; do \
+		IFS=$$'#' ; \
+		help_split=($$help_line) ; \
+		help_command=`echo $${help_split[0]} | sed -e 's/^ *//' -e 's/ *$$//'` ; \
+		help_info=`echo $${help_split[2]} | sed -e 's/^ *//' -e 's/ *$$//'` ; \
+		printf "%-30s %s\n" $$help_command $$help_info ; \
+	done
+
+all: linux_build macos_build ## build linux and macos
+
+linux_build: example_game.c ## build x86_64 binary
 	mkdir -p _build/x86_64
 	cc example_game.c -I/usr/local/include -L/usr/local/lib -lSDL2 -o _build/x86_64/example_game.x86_64
 
-macos_build: example_game.c info_plist iconset
+macos_build: example_game.c info_plist iconset ## build ExampleGame.app bundle
 	mkdir -p _build/macos/$(APPNAME).app/Contents/MacOS
 	cc example_game.c -I/usr/local/include -L/usr/local/lib -lSDL2 -o _build/macos/$(APPNAME).app/Contents/MacOS/$(APPNAME)
 
-info_plist:
+info_plist: ## copy the Info.plist file to where it goes
 	mkdir -p _build/macos/$(APPNAME).app/Contents/MacOS
 	cp Info.plist _build/macos/$(APPNAME).app/Contents/Info.plist
 
-iconset:
+iconset: ## build the ExampleGame.icns file and put it where it goes
 	mkdir -p _build/macos/$(APPNAME).app/Contents/Resources
 	mkdir -p _build/macos/$(APPNAME).iconset
 	sips -z 16 16     $(APPNAME)Icon.png --out _build/macos/$(APPNAME).iconset/icon_16x16.png
@@ -30,5 +45,5 @@ iconset:
 	iconutil -c icns -o _build/macos/$(APPNAME).app/Contents/Resources/$(APPNAME).icns _build/macos/$(APPNAME).iconset
 	rm -r _build/macos/$(APPNAME).iconset
 
-run: _build/x86_64/example_game.x86_64
+run: _build/x86_64/example_game.x86_64 ## run the linux.x86_64 binary
 	./_build/x86_64/example_game.x86_64
